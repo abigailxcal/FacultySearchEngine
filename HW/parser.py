@@ -3,6 +3,8 @@ from urllib.error import HTTPError
 from urllib.parse import urljoin
 import re
 from bs4 import BeautifulSoup
+from pymongo import MongoClient
+import datetime
 
 
  # returns html of url 
@@ -17,7 +19,8 @@ def retrieveURL(url):
 def target_page(html):
     faculty = html.find('div',{'class':"fac-info"})   #this is the one!!!
     if faculty is not None:
-        print(faculty.get_text().strip("\n"))
+        pass
+        #print(faculty.get_text().strip("\n"))
         #return True
     #return False
     return faculty is not None

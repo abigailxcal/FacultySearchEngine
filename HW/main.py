@@ -13,9 +13,10 @@ What still needs to be done:
 
 def main():
     #SEED ='https://www.cpp.edu/sci/biological-sciences/index.shtml'
-    SEED = 'https://www.cpp.edu/engineering/ce/index.shtml'
+    #SEED = 'https://www.cpp.edu/engineering/ce/index.shtml'
+    SEED = 'https://www.cpp.edu/engineering/ce/faculty.shtml'
 
-    num_targets = 10
+    num_targets = 5
     request_queue = frontier.Frontier()
     request_queue.addURL(SEED)
     crawler.crawl(request_queue,num_targets)
