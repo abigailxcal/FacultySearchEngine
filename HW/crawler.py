@@ -2,91 +2,41 @@ from urllib.request import urlopen
 from urllib.parse import urljoin
 from urllib.error import HTTPError
 import parser
-from pymongo import MongoClient
+
 import datetime
 import re
-# should connecting to db be here or parser or main??????/
-def connectDataBase():
-    DB_NAME = "Project"
-    DB_HOST = "localhost"
-    DB_PORT = 27017
-    try:
-
-        client = MongoClient(host=DB_HOST, port=DB_PORT)
-        db = client[DB_NAME]
-
-        return db
-
-    except:
-        print("Database not connected successfully")
-
-#db = connectDataBase()
-#documents = db.documents
-
-def storePage(url,html):
-    #print("Non-faculty: ", url)
-    doc = {"_id": url,
-           "html": html}
-    #documents.insert_one(doc)
-
-def storeFaculty(url,html):
-    print("Faculty: ",url)
-    #name
-    name = html.find('h1').text
-    #print("Name: ",name)
-    #<div class="col">
-    #span3 fac rightcol
-    left_column = html.find_all('div',{'class':'col'})
-    right_column = html.find_all('div',{'class':'accolades'})
-    doc_text = []
-    for elem in left_column:
-        #print(elem.text.strip('\n'))
-        doc_text.append(re.sub(r"[\xa0\n\t]", " ", elem.text))
-
-    for elem in right_column:
-        #print(elem.text.strip('\n'))
-       doc_text.append(re.sub(r"[\xa0\n\t]", " ", elem.text))
-    for text in doc_text:
-        print(text)
-        print()
 
 
-    headers = html.find_all('h2')
-    print("*******find_all.h2: ",headers)
+def storePage(url,html,db):
+    # checks for duplicate urls
+    page_exists = db.find_one({'_id': url})
+    if not page_exists:
+        doc = {"_id": url,
+           "html": str(html)}
+        db.insert_one(doc)
 
-    doc = {"_id": url,
-           "html": html}
-    #documents.insert_one(doc)
-
-
-
+    
 
 
 # crawl thread procedure from template 
-def crawl(frontier,num_targets):
-    links_visited = []
+def crawl(db,frontier,num_targets):
     targets_found = 0
     while not frontier.done():
         try:
             url = frontier.nextURL()
-            links_visited.append(url)
             #print("current: ",url)
             html = parser.retrieveURL(url)
-
-            # ----insert storePage() here----
-
-            if parser.target_page(html):
+            storePage(url,html,db)
+            if parser.target_page(url,html,db):
                 targets_found +=1
-                storeFaculty(url,html)
-                #store faculty method
-            else: 
-                storePage(url,html)
+                #storeFaculty(url,html)  #maybe this should be in the parser so the crawl thread is exactly like the template
             if targets_found == num_targets:
+                print("All targets found for department.")
                 frontier.clear()
             else:
                 urls = parser.parse(html)
                 for url in urls:
-                    if url not in links_visited and url not in frontier.getQueue():
+                    if url not in frontier.getQueue():
                         frontier.addURL(url)
 
         except HTTPError as e:
